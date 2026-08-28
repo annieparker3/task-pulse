@@ -1,7 +1,6 @@
 import { useTaskStore } from '../../store/taskStore';
 import { useTaskTimer } from '../../hooks/useTaskTimer';
 import { formatTimeRemaining } from '../../lib/time';
-import { requestNotificationPermission } from '../../services/notificationService';
 import { Play, Check, Plus, AlertCircle } from 'lucide-react';
 
 export function TimerScreen() {
@@ -30,7 +29,6 @@ export function TimerScreen() {
       setAddTaskOpen(true);
       return;
     }
-    await requestNotificationPermission();
     updateTask({
       ...activeTask,
       status: 'in_progress',

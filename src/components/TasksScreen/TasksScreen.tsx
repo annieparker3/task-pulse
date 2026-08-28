@@ -1,5 +1,4 @@
 import { useTaskStore } from '../../store/taskStore';
-import { requestNotificationPermission } from '../../services/notificationService';
 import { Play, Plus, Trash2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -10,7 +9,6 @@ export function TasksScreen() {
   const active = tasks.filter((t) => t.status === 'in_progress' || t.status === 'expired');
 
   const handleStart = async (task: (typeof tasks)[0]) => {
-    await requestNotificationPermission();
     updateTask({
       ...task,
       status: 'in_progress',

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTaskStore, type Task } from '../store/taskStore';
 import { playChime } from '../services/audioService';
-import { sendTaskExpiredNotification, requestNotificationPermission } from '../services/notificationService';
+import { sendTaskExpiredNotification } from '../services/notificationService';
 
 export function useTaskTimer(task: Task) {
   const updateTask = useTaskStore((state) => state.updateTask);
@@ -22,11 +22,6 @@ export function useTaskTimer(task: Task) {
         playChime();
         const durationMinutes = Math.floor(currentTask.durationMs / 60000);
         const durationLabel = durationMinutes >= 60 ? `${(durationMinutes / 60).toFixed(1)}h` : `${durationMinutes}m`;
-        
-        // Ensure notification permission is granted before showing notification
-        if (Notification.permission !== 'granted') {
-          await requestNotificationPermission();
-        }
         
         await sendTaskExpiredNotification(currentTask.title, durationLabel);
       }
@@ -94,4 +89,3 @@ export function useTaskTimer(task: Task) {
 
   return { remainingMs, progress };
 }
-export { requestNotificationPermission };

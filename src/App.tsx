@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTaskStore } from './store/taskStore';
-import { registerServiceWorker } from './services/notificationService';
+import { registerServiceWorker, requestNotificationPermission } from './services/notificationService';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { TimerScreen } from './components/TimerScreen/TimerScreen';
 import { TasksScreen } from './components/TasksScreen/TasksScreen';
@@ -18,6 +18,7 @@ function App() {
 
   useEffect(() => {
     registerServiceWorker();
+    requestNotificationPermission();
     if (!isLoaded) {
       loadTasks();
     }
