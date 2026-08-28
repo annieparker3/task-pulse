@@ -44,10 +44,14 @@ export function scheduleNotification({ taskId, title, endTime, userId }) {
       });
 
       try {
+        console.log(`[Push] Sending notification for task "${title}" (${taskId}) to user ${userId}`);
         await webPush.sendNotification(subscription, payload);
+        console.log(`[Push] Notification sent successfully for task ${taskId}`);
       } catch (err) {
-        console.error('Error sending Web Push notification:', err);
+        console.error(`[Push] Error sending notification for task ${taskId}:`, err.message);
       }
+    } else {
+      console.warn(`[Push] No subscription found for user ${userId}, task ${taskId}`);
     }
 
     scheduledTasks.delete(taskId);
@@ -58,6 +62,8 @@ export function scheduleNotification({ taskId, title, endTime, userId }) {
     taskData: { taskId, title, endTime, userId },
     subscription: subscriptions.get(userId),
   });
+
+  console.log(`[Push] Scheduled notification for task "${title}" in ${Math.round(delay / 1000)}s`);
 }
 
 export function cancelNotification(taskId) {

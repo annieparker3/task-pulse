@@ -125,36 +125,28 @@ export const sendTaskExpiredNotification = async (taskTitle: string, durationLab
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   if (isIOS) {
-    // iOS doesn't support Notification API, use vibration + alert
+    // iOS doesn't support Notification API - use vibration + alert
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
     
-    // Show alert for iOS
+    // Show alert for iOS as fallback
     setTimeout(() => {
       alert(`⏰ ${title}\n\n${body}`);
     }, 100);
   } else {
-    // Android, PC, and other platforms - use Notification API
-    if ('Notification' in window) {
-      if (Notification.permission === 'granted') {
+    // Android, PC, and other platforms - show local notification
+    // Note: Web Push notification from server is separate and shows in notification area
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
         new Notification(title, {
           body,
           icon: '/favicon.svg',
           tag: `task-expired-${taskTitle}`,
           requireInteraction: true,
         });
-      } else if (Notification.permission === 'default') {
-        // Only request permission if not already granted
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          new Notification(title, {
-            body,
-            icon: '/favicon.svg',
-            tag: `task-expired-${taskTitle}`,
-            requireInteraction: true,
-          });
-        }
+      } catch (err) {
+        console.warn('Local notification failed:', err);
       }
     }
   }

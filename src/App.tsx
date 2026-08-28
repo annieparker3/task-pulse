@@ -17,11 +17,14 @@ function App() {
   useKeyboardShortcuts();
 
   useEffect(() => {
-    registerServiceWorker();
-    requestNotificationPermission();
-    if (!isLoaded) {
-      loadTasks();
-    }
+    const init = async () => {
+      await registerServiceWorker();
+      await requestNotificationPermission();
+      if (!isLoaded) {
+        loadTasks();
+      }
+    };
+    init();
   }, [isLoaded, loadTasks]);
 
   const activeScreen = (

@@ -47,6 +47,7 @@ app.post('/api/subscribe', (req, res) => {
     return res.status(400).json({ error: 'Missing userId or subscription' });
   }
 
+  console.log(`[Subscribe] Saving subscription for user ${userId}`);
   saveSubscription(userId, subscription);
   res.json({ success: true });
 });
@@ -58,6 +59,7 @@ app.post('/api/schedule-notification', (req, res) => {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
 
+  console.log(`[Schedule] Received request to schedule notification for task "${title}" (${taskId})`);
   scheduleNotification({ taskId, title: title || 'Task', endTime, userId });
   res.json({ success: true, message: `Notification scheduled for ${new Date(endTime).toISOString()}` });
 });
