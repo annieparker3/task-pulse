@@ -23,6 +23,11 @@ export function useTaskTimer(task: Task) {
         const durationMinutes = Math.floor(currentTask.durationMs / 60000);
         const durationLabel = durationMinutes >= 60 ? `${(durationMinutes / 60).toFixed(1)}h` : `${durationMinutes}m`;
         
+        // Ensure notification permission is granted before showing notification
+        if (Notification.permission !== 'granted') {
+          await requestNotificationPermission();
+        }
+        
         await sendTaskExpiredNotification(currentTask.title, durationLabel);
       }
 
