@@ -100,7 +100,7 @@ app.post('/api/action', (req, res) => {
 
 // SPA fallback — serve index.html for any non-API route in production
 if (isProd) {
-  app.get('*', (req, res) => {
+  app.get(/^(?!\/api\/).*$/, (req, res) => {
     res.sendFile(join(__dirname, '..', 'dist', 'index.html'));
   });
 }
