@@ -1,0 +1,33 @@
+:root {
+  /* iPhone Dark Palette */
+  --bg: #000000;              /* Pure Black */
+  --surface: #1C1C1E;         /* Dark Card Surface */
+  --surface-sunken: #2C2C2E;  /* Input & Control Surface */
+  --surface-border: #3A3A3C;  /* Subtle Dividers */
+
+  /* Ink */
+  --ink-primary: #FFFFFF;     /* Pure White */
+  --ink-secondary: #8E8E93;   /* Muted Slate */
+  --ink-tertiary: #636366;    /* Dark Placeholder */
+
+  /* Accent - Apple Orange */
+  --accent: #FF9500;
+  --accent-strong: #E08200;
+  --accent-glow: rgba(255, 149, 0, 0.25);
+
+  /* Status Colors */
+  --status-pending: #8E8E93;   /* Muted Gray */
+  --status-progress: #FF9500;  /* Apple Orange */
+  --status-completed: #30D158; /* Apple Green */
+  --status-expired: #FF453A;   /* Apple Red */
+  --status-info: #0A84FF;      /* Apple Blue */
+
+  /* Structure */
+  --border: #2C2C2E;
+  --border-strong: #3A3A3C;
+
+  /* Fonts */
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
