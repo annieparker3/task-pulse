@@ -124,49 +124,39 @@ export const sendTaskExpiredNotification = async (taskTitle: string, durationLab
   // Check if running on iOS
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  // Standard Notification API (Android, PC, Chrome, Firefox, etc.)
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, {
-      body,
-      icon: '/favicon.svg',
-      tag: `task-expired-${taskTitle}`,
-      requireInteraction: true,
-    });
-  } else if ('Notification' in window && Notification.permission === 'default') {
-    // Try to request permission on non-iOS platforms
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      new Notification(title, {
-        body,
-        icon: '/favicon.svg',
-        tag: `task-expired-${taskTitle}`,
-        requireInteraction: true,
-      });
-    }
-  }
-
-  // iOS fallback: Vibration pattern + try to show iOS alert
   if (isIOS) {
-    // Vibrate with an intense pattern
+    // iOS doesn't support Notification API, use vibration + alert
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
-
-    // On iOS, try using the private webkit notification API if available
-    // This is a last resort for getting user attention
-    if ((window as unknown as { webkit?: { messageHandlers?: { notify?: { postMessage?: (msg: string) => void } } } }).webkit?.messageHandlers?.notify?.postMessage) {
-      try {
-        (window as unknown as { webkit: { messageHandlers: { notify: { postMessage: (msg: string) => void } } } }).webkit.messageHandlers.notify.postMessage(JSON.stringify({ title, body }));
-      } catch (err) {
-        console.warn('iOS webkit notification failed:', err);
-      }
-    }
-
-    // Fallback: Show browser alert for iOS users as last resort
-    // This will at least get the user's attention with sound and visual
+    
+    // Show alert for iOS
     setTimeout(() => {
       alert(`⏰ ${title}\n\n${body}`);
     }, 100);
+  } else {
+    // Android, PC, and other platforms - use Notification API
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification(title, {
+          body,
+          icon: '/favicon.svg',
+          tag: `task-expired-${taskTitle}`,
+          requireInteraction: true,
+        });
+      } else if (Notification.permission === 'default') {
+        // Only request permission if not already granted
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          new Notification(title, {
+            body,
+            icon: '/favicon.svg',
+            tag: `task-expired-${taskTitle}`,
+            requireInteraction: true,
+          });
+        }
+      }
+    }
   }
 };
 
