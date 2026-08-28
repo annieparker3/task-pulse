@@ -25,10 +25,15 @@ function urlBase64ToUint8Array(base64String: string) {
 export const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
+      console.log('[SW] Registering service worker...');
       swRegistration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('[SW] Service worker registered successfully');
       // Attempt push registration if permission already granted
       if (Notification.permission === 'granted') {
+        console.log('[SW] Permission already granted, registering push subscription...');
         await registerWebPushSubscription();
+      } else {
+        console.log('[SW] Permission not yet granted (current:', Notification.permission, ')');
       }
     } catch (err) {
       console.warn('Service Worker registration failed:', err);
@@ -37,51 +42,82 @@ export const registerServiceWorker = async () => {
 };
 
 export const registerWebPushSubscription = async (): Promise<boolean> => {
-  if (!swRegistration || !('pushManager' in swRegistration)) return false;
+  if (!swRegistration || !('pushManager' in swRegistration)) {
+    console.warn('[Push] Cannot register: swRegistration=', !!swRegistration, 'pushManager=', swRegistration ? 'pushManager' in swRegistration : 'N/A');
+    return false;
+  }
 
   try {
+    console.log('[Push] Starting push subscription...');
     // 1. Fetch VAPID public key from backend
     const res = await fetch('/api/vapid-public-key');
     const { publicKey } = await res.json();
-    if (!publicKey) return false;
+    if (!publicKey) {
+      console.warn('[Push] No VAPID public key from server');
+      return false;
+    }
+    console.log('[Push] Got VAPID public key');
 
     // 2. Subscribe to PushManager
     const applicationServerKey = urlBase64ToUint8Array(publicKey);
     let subscription = await swRegistration.pushManager.getSubscription();
+    console.log('[Push] Existing subscription:', !!subscription);
 
     if (!subscription) {
+      console.log('[Push] Creating new push subscription...');
       subscription = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey,
       });
+      console.log('[Push] New subscription created');
     }
 
     // 3. Post subscription to backend server
     const userId = getUserId();
-    await fetch('/api/subscribe', {
+    console.log('[Push] Sending subscription to server for user:', userId);
+    const response = await fetch('/api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, subscription }),
     });
+    
+    if (response.ok) {
+      console.log('[Push] Subscription saved to server successfully');
+    } else {
+      console.warn('[Push] Server returned error:', response.status);
+    }
 
     return true;
   } catch (err) {
-    console.warn('Web Push subscription failed:', err);
+    console.warn('[Push] Web Push subscription failed:', err);
     return false;
   }
 };
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
-  if (!('Notification' in window)) return false;
+  if (!('Notification' in window)) {
+    console.warn('[Notification] Notification API not available');
+    return false;
+  }
+
+  console.log('[Notification] Current permission:', Notification.permission);
 
   if (Notification.permission === 'granted') {
+    console.log('[Notification] Permission already granted, registering push...');
     await registerWebPushSubscription();
     return true;
   }
-  if (Notification.permission === 'denied') return false;
+  if (Notification.permission === 'denied') {
+    console.warn('[Notification] Permission denied by user');
+    return false;
+  }
 
+  console.log('[Notification] Requesting permission from user...');
   const permission = await Notification.requestPermission();
+  console.log('[Notification] User responded with:', permission);
+  
   if (permission === 'granted') {
+    console.log('[Notification] Permission granted, registering push...');
     await registerWebPushSubscription();
     return true;
   }
