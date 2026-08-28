@@ -119,29 +119,54 @@ export const cancelServerNotification = async (taskId: string) => {
 
 export const sendTaskExpiredNotification = async (taskTitle: string, durationLabel: string) => {
   const title = "TIME'S UP!";
-  const options: NotificationOptions = {
-    body: `Your task "${taskTitle}" (${durationLabel}) has reached its time limit.`,
-    icon: '/favicon.svg',
-    tag: `task-expired-${taskTitle}`,
-    requireInteraction: true,
-  };
+  const body = `Your task "${taskTitle}" (${durationLabel}) has reached its time limit.`;
 
-  if ('Notification' in window) {
-    // If permission is not granted, try to request it
-    if (Notification.permission === 'denied') {
-      console.warn('Notification permission denied by user');
-      return;
+  // Check if running on iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // Standard Notification API (Android, PC, Chrome, Firefox, etc.)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: '/favicon.svg',
+      tag: `task-expired-${taskTitle}`,
+      requireInteraction: true,
+    });
+  } else if ('Notification' in window && Notification.permission === 'default') {
+    // Try to request permission on non-iOS platforms
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/favicon.svg',
+        tag: `task-expired-${taskTitle}`,
+        requireInteraction: true,
+      });
     }
-    
-    if (Notification.permission === 'granted') {
-      new Notification(title, options);
-    } else if (Notification.permission === 'default') {
-      // Permission not yet requested, try to request it
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        new Notification(title, options);
+  }
+
+  // iOS fallback: Vibration pattern + try to show iOS alert
+  if (isIOS) {
+    // Vibrate with an intense pattern
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+
+    // On iOS, try using the private webkit notification API if available
+    // This is a last resort for getting user attention
+    if ((window as unknown as { webkit?: { messageHandlers?: { notify?: { postMessage?: (msg: string) => void } } } }).webkit?.messageHandlers?.notify?.postMessage) {
+      try {
+        (window as unknown as { webkit: { messageHandlers: { notify: { postMessage: (msg: string) => void } } } }).webkit.messageHandlers.notify.postMessage(JSON.stringify({ title, body }));
+      } catch (err) {
+        console.warn('iOS webkit notification failed:', err);
       }
     }
+
+    // Fallback: Show browser alert for iOS users as last resort
+    // This will at least get the user's attention with sound and visual
+    setTimeout(() => {
+      alert(`⏰ ${title}\n\n${body}`);
+    }, 100);
   }
 };
 
